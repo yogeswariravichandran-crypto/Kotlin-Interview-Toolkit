@@ -1,0 +1,1859 @@
+# Kotlin Collections & Higher-Order Functions — Interview Cheat Sheet
+
+A practical revision guide for Kotlin Android interviews.
+
+> **Core interview rule:** Don't just remember the function name. Know **what it does → what it returns → exact return type → whether it mutates the original collection → when to use it.**
+
+---
+
+## 1. Kotlin Collection Mental Model
+
+### `List`
+
+Ordered collection that allows duplicates.
+
+```kotlin
+val numbers = listOf(10, 20, 20, 30)
+```
+
+### `Set`
+
+Unique elements.
+
+```kotlin
+val numbers = setOf(10, 20, 30)
+```
+
+### `Map`
+
+Key-value pairs.
+
+```kotlin
+val user = mapOf(
+    "name" to "Arun",
+    "age" to 30
+)
+```
+
+### Mutable collections
+
+```kotlin
+val numbers = mutableListOf(10, 20, 30)
+
+numbers.add(40)
+numbers.remove(20)
+```
+
+`listOf()`, `setOf()`, and `mapOf()` create read-only collections.
+
+---
+
+# 2. Higher-Order Functions
+
+A **higher-order function** is a function that takes another function as a parameter or returns a function.
+
+## Function type
+
+```kotlin
+(Int, Int) -> Int
+```
+
+Means:
+
+* takes two `Int` values
+* returns an `Int`
+
+Example:
+
+```kotlin
+fun operate(
+    a: Int,
+    b: Int,
+    operation: (Int, Int) -> Int
+): Int {
+    return operation(a, b)
+}
+
+val result = operate(4, 5) { x, y -> x * y }
+```
+
+Result:
+
+```text
+20
+```
+
+---
+
+## Passing a function reference
+
+```kotlin
+fun add(a: Int, b: Int): Int {
+    return a + b
+}
+
+val operation: (Int, Int) -> Int = ::add
+
+operate(10, 20, ::add)
+```
+
+### Important distinction
+
+```kotlin
+::add
+```
+
+→ function reference
+
+```kotlin
+add(10, 20)
+```
+
+→ calls the function and produces a value
+
+---
+
+## Reusable Lambda
+
+```kotlin
+val multiply: (Int, Int) -> Int = { x, y ->
+    x * y
+}
+```
+
+---
+
+# 3. Callback
+
+A callback is a function passed to another function to be executed later or when an operation completes.
+
+```kotlin
+fun fetchUser(onSuccess: (String) -> Unit) {
+    onSuccess("Yogeswari")
+}
+```
+
+Usage:
+
+```kotlin
+fetchUser { name ->
+    println(name)
+}
+```
+
+### Android relevance
+
+Callbacks appear in:
+
+* API responses
+* listeners
+* click handlers
+* asynchronous operations
+* SDK integrations
+
+Modern Kotlin code often replaces callback-heavy APIs with **Coroutines / Flow**.
+
+---
+
+# 4. `map`
+
+Transforms every element.
+
+```kotlin
+val numbers = listOf(1, 2, 3)
+
+val result = numbers.map {
+    it * 10
+}
+```
+
+Result:
+
+```text
+[10, 20, 30]
+```
+
+Type:
+
+```kotlin
+List<Int>
+```
+
+### Mental model
+
+```text
+A → B
+List<A> → List<B>
+```
+
+---
+
+# 5. `filter`
+
+Keeps elements that satisfy a condition.
+
+```kotlin
+val numbers = listOf(10, 15, 20, 25, 30)
+
+val result = numbers.filter {
+    it % 2 == 0
+}
+```
+
+Result:
+
+```text
+[10, 20, 30]
+```
+
+Type:
+
+```kotlin
+List<Int>
+```
+
+### Lambda type
+
+```kotlin
+(Int) -> Boolean
+```
+
+---
+
+# 6. `forEach`
+
+Used for side effects.
+
+```kotlin
+numbers.forEach {
+    println(it)
+}
+```
+
+Return type:
+
+```kotlin
+Unit
+```
+
+### Important
+
+```text
+map     → transforms → List
+filter  → selects    → List
+forEach → side effect → Unit
+```
+
+Don't expect `forEach` to produce a new collection.
+
+---
+
+# 7. `first`
+
+Returns the first element satisfying a condition.
+
+```kotlin
+val result = numbers.first {
+    it > 20
+}
+```
+
+If no matching element exists:
+
+```text
+NoSuchElementException
+```
+
+---
+
+# 8. `firstOrNull`
+
+Returns the first matching element or `null`.
+
+```kotlin
+val result = numbers.firstOrNull {
+    it > 100
+}
+```
+
+Result:
+
+```text
+null
+```
+
+Type:
+
+```kotlin
+Int?
+```
+
+---
+
+# 9. `find`
+
+`find` behaves like `firstOrNull`.
+
+```kotlin
+val result = numbers.find {
+    it > 20
+}
+```
+
+Return type:
+
+```kotlin
+Int?
+```
+
+### Remember
+
+```text
+first()       → element / throws if not found
+firstOrNull() → element? / null if not found
+find()        → element? / null if not found
+```
+
+---
+
+# 10. `any`
+
+Checks whether **at least one** element satisfies a condition.
+
+```kotlin
+val result = numbers.any {
+    it > 50
+}
+```
+
+Return type:
+
+```kotlin
+Boolean
+```
+
+---
+
+# 11. `all`
+
+Checks whether **every** element satisfies a condition.
+
+```kotlin
+val result = numbers.all {
+    it > 0
+}
+```
+
+Return type:
+
+```kotlin
+Boolean
+```
+
+---
+
+# 12. `none`
+
+Checks whether **no** element satisfies a condition.
+
+```kotlin
+val result = numbers.none {
+    it < 0
+}
+```
+
+Return type:
+
+```kotlin
+Boolean
+```
+
+---
+
+# 13. `count`
+
+Returns the number of elements satisfying a condition.
+
+```kotlin
+val numbers = listOf(10, 15, 20, 25, 30)
+
+val result = numbers.count {
+    it % 2 == 0
+}
+```
+
+Result:
+
+```text
+3
+```
+
+Type:
+
+```kotlin
+Int
+```
+
+### Compare
+
+```kotlin
+numbers.filter { it % 2 == 0 }
+```
+
+→ `List<Int>`
+
+```kotlin
+numbers.count { it % 2 == 0 }
+```
+
+→ `Int`
+
+---
+
+# 14. `reduce`
+
+Combines elements using the first element as the initial accumulator.
+
+```kotlin
+val numbers = listOf(1, 2, 3, 4)
+
+val result = numbers.reduce { acc, value ->
+    acc + value
+}
+```
+
+Result:
+
+```text
+10
+```
+
+### Important
+
+The first element becomes the initial accumulator.
+
+Empty collection:
+
+```kotlin
+emptyList<Int>().reduce { acc, value -> acc + value }
+```
+
+→ throws an exception.
+
+---
+
+# 15. `fold`
+
+Combines elements using a supplied initial value.
+
+```kotlin
+val numbers = listOf(1, 2, 3, 4)
+
+val result = numbers.fold(10) { acc, value ->
+    acc + value
+}
+```
+
+Result:
+
+```text
+20
+```
+
+Because:
+
+```text
+10 + 1 + 2 + 3 + 4 = 20
+```
+
+### Empty collection
+
+```kotlin
+emptyList<Int>().fold(10) { acc, value ->
+    acc + value
+}
+```
+
+Result:
+
+```text
+10
+```
+
+### `reduce` vs `fold`
+
+|                  | `reduce`                   | `fold`                      |
+| ---------------- | -------------------------- | --------------------------- |
+| Initial value    | First element              | Explicit value              |
+| Empty collection | Throws                     | Returns initial value       |
+| Example          | `reduce { acc, x -> ... }` | `fold(0) { acc, x -> ... }` |
+
+---
+
+# 16. `reduceIndexed`
+
+Same concept as `reduce`, but provides the index.
+
+```kotlin
+val result = numbers.reduceIndexed { index, acc, value ->
+    acc + value
+}
+```
+
+The first element is still the initial accumulator.
+
+The operation starts with the second element.
+
+---
+
+# 17. `foldIndexed`
+
+`fold` + index.
+
+```kotlin
+val result = numbers.foldIndexed(0) { index, acc, value ->
+    acc + value
+}
+```
+
+The supplied initial value is used as the accumulator.
+
+Index starts from `0`.
+
+---
+
+# 18. `groupBy`
+
+Groups elements based on a key.
+
+```kotlin
+val names = listOf(
+    "Arun",
+    "Priya",
+    "Anu",
+    "Rahul",
+    "Asha",
+    "Prakash"
+)
+
+val result = names.groupBy {
+    it.first()
+}
+```
+
+Result:
+
+```text
+A = [Arun, Anu, Asha]
+P = [Priya, Prakash]
+R = [Rahul]
+```
+
+Type:
+
+```kotlin
+Map<Char, List<String>>
+```
+
+### Object example
+
+```kotlin
+data class User(
+    val name: String,
+    val city: String
+)
+
+val result = users.groupBy {
+    it.city
+}
+```
+
+Type:
+
+```kotlin
+Map<String, List<User>>
+```
+
+### Mental model
+
+```text
+One key → Many values
+```
+
+---
+
+# 19. `associateBy`
+
+Creates a map where the lambda result becomes the key.
+
+```kotlin
+val result = users.associateBy {
+    it.city
+}
+```
+
+Type:
+
+```kotlin
+Map<String, User>
+```
+
+### Important
+
+If duplicate keys exist, the **later value replaces the previous value**.
+
+### Mental model
+
+```text
+Key → One value
+```
+
+Compare:
+
+```text
+groupBy     → Key → List<Value>
+associateBy → Key → Value
+```
+
+---
+
+# 20. `associateWith`
+
+The original element becomes the key.
+
+```kotlin
+val names = listOf("Arun", "Priya", "Anu")
+
+val result = names.associateWith {
+    it.length
+}
+```
+
+Result:
+
+```text
+Arun  → 4
+Priya → 5
+Anu   → 3
+```
+
+Type:
+
+```kotlin
+Map<String, Int>
+```
+
+### Remember
+
+```text
+associateBy
+lambda result → key
+element        → value
+
+associateWith
+element        → key
+lambda result  → value
+```
+
+---
+
+# 21. `groupingBy().eachCount()`
+
+Useful for frequency counting.
+
+```kotlin
+val names = listOf(
+    "Arun",
+    "Priya",
+    "Arun",
+    "Anu",
+    "Priya",
+    "Arun"
+)
+
+val result = names
+    .groupingBy { it }
+    .eachCount()
+```
+
+Result:
+
+```text
+Arun  → 3
+Priya → 2
+Anu   → 1
+```
+
+Type:
+
+```kotlin
+Map<String, Int>
+```
+
+### Character frequency
+
+```kotlin
+val words = listOf(
+    "apple",
+    "amazon",
+    "orange"
+)
+
+val result = words
+    .groupingBy { it.first() }
+    .eachCount()
+```
+
+`it.first()` returns `Char`, therefore:
+
+```kotlin
+Map<Char, Int>
+```
+
+---
+
+# 22. `partition`
+
+Splits elements into two lists:
+
+1. elements satisfying the condition
+2. elements not satisfying the condition
+
+```kotlin
+val numbers = listOf(1, 2, 3, 4, 5, 6)
+
+val result = numbers.partition {
+    it % 2 == 0
+}
+```
+
+Result:
+
+```text
+([2, 4, 6], [1, 3, 5])
+```
+
+Type:
+
+```kotlin
+Pair<List<Int>, List<Int>>
+```
+
+### Compare
+
+```text
+filter    → matching elements only
+partition → matching + non-matching
+```
+
+---
+
+# 23. `flatMap`
+
+Transforms and then flattens.
+
+```kotlin
+val numbers = listOf(
+    listOf(1, 2),
+    listOf(3, 4),
+    listOf(5, 6)
+)
+
+val result = numbers.flatMap {
+    it
+}
+```
+
+Result:
+
+```text
+[1, 2, 3, 4, 5, 6]
+```
+
+Type:
+
+```kotlin
+List<Int>
+```
+
+### Object example
+
+```kotlin
+data class User(
+    val name: String,
+    val hobbies: List<String>
+)
+
+val hobbies = users.flatMap {
+    it.hobbies
+}
+```
+
+Result:
+
+```text
+List<String>
+```
+
+### Mental model
+
+```text
+flatMap = map + flatten
+```
+
+---
+
+# 24. `flatten`
+
+Removes one level of nesting.
+
+```kotlin
+val numbers = listOf(
+    listOf(1, 2),
+    listOf(3, 4),
+    listOf(5, 6)
+)
+
+val result = numbers.flatten()
+```
+
+Result:
+
+```text
+[1, 2, 3, 4, 5, 6]
+```
+
+Type:
+
+```kotlin
+List<Int>
+```
+
+### Difference
+
+```text
+map
+List<A> → List<B>
+
+flatten
+List<List<A>> → List<A>
+
+flatMap
+List<A> → List<B>
+```
+
+where the transformation produces a collection.
+
+---
+
+# 25. `zip`
+
+Combines elements by their position.
+
+```kotlin
+val names = listOf("Arun", "Priya", "Anu")
+val ages = listOf(30, 28, 25)
+
+val result = names.zip(ages)
+```
+
+Result:
+
+```text
+[
+    (Arun, 30),
+    (Priya, 28),
+    (Anu, 25)
+]
+```
+
+Type:
+
+```kotlin
+List<Pair<String, Int>>
+```
+
+### Important
+
+If lists have different sizes, `zip` stops at the shorter list.
+
+```text
+[1, 2, 3].zip([10, 20])
+```
+
+→
+
+```text
+[(1, 10), (2, 20)]
+```
+
+---
+
+# 26. `distinct`
+
+Removes duplicate elements.
+
+```kotlin
+val numbers = listOf(
+    1, 2, 2, 3, 4, 4, 5, 3
+)
+
+val result = numbers.distinct()
+```
+
+Result:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+Type:
+
+```kotlin
+List<Int>
+```
+
+Preserves the order of the first occurrence.
+
+---
+
+# 27. `distinctBy`
+
+Removes duplicates based on a selected property.
+
+```kotlin
+val result = users.distinctBy {
+    it.id
+}
+```
+
+Type:
+
+```kotlin
+List<User>
+```
+
+If duplicate IDs exist, the **first occurrence is retained**.
+
+### Compare
+
+```text
+distinct
+→ compares entire elements
+
+distinctBy { it.id }
+→ compares selected property
+```
+
+---
+
+# 28. `sortedBy`
+
+Sorts elements in ascending order based on a property.
+
+```kotlin
+val result = users.sortedBy {
+    it.age
+}
+```
+
+Returns:
+
+```kotlin
+List<User>
+```
+
+Descending:
+
+```kotlin
+val result = users.sortedByDescending {
+    it.age
+}
+```
+
+### Important
+
+The original list is not modified.
+
+---
+
+# 29. `minOrNull` / `maxOrNull`
+
+Works directly on elements that have a natural ordering.
+
+```kotlin
+val prices = listOf(20000, 5000, 3000)
+
+prices.minOrNull() // 3000
+prices.maxOrNull() // 20000
+```
+
+Return type:
+
+```kotlin
+Int?
+```
+
+Empty collection:
+
+```kotlin
+emptyList<Int>().maxOrNull()
+```
+
+→ `null`
+
+### With custom objects
+
+This does not work automatically:
+
+```kotlin
+products.maxOrNull() // Product is not naturally comparable
+```
+
+Instead use:
+
+```kotlin
+products.maxByOrNull {
+    it.price
+}
+```
+
+---
+
+# 30. `minByOrNull` / `maxByOrNull`
+
+Returns the **object** having the minimum/maximum property.
+
+```kotlin
+val cheapestProduct = products.minByOrNull {
+    it.price
+}
+```
+
+Type:
+
+```kotlin
+Product?
+```
+
+```kotlin
+val expensiveProduct = products.maxByOrNull {
+    it.price
+}
+```
+
+Type:
+
+```kotlin
+Product?
+```
+
+### Mental model
+
+```text
+By → gives the OBJECT
+```
+
+---
+
+# 31. `minOfOrNull` / `maxOfOrNull`
+
+Returns the minimum/maximum **property value**.
+
+```kotlin
+val cheapestPrice = products.minOfOrNull {
+    it.price
+}
+```
+
+Type:
+
+```kotlin
+Int?
+```
+
+```kotlin
+val highestPrice = products.maxOfOrNull {
+    it.price
+}
+```
+
+Type:
+
+```kotlin
+Int?
+```
+
+### Remember
+
+```text
+maxByOrNull { it.price }
+→ Product?
+
+maxOfOrNull { it.price }
+→ Int?
+```
+
+---
+
+# 32. `sum`
+
+Adds numeric elements.
+
+```kotlin
+val numbers = listOf(10, 20, 30)
+
+val result = numbers.sum()
+```
+
+Result:
+
+```text
+60
+```
+
+Type:
+
+```kotlin
+Int
+```
+
+---
+
+# 33. `sumOf`
+
+Calculates a sum based on a property or expression.
+
+```kotlin
+data class Product(
+    val name: String,
+    val price: Int,
+    val quantity: Int
+)
+
+val total = products.sumOf {
+    it.price * it.quantity
+}
+```
+
+For:
+
+```text
+Phone → 20000 × 2 = 40000
+Watch → 5000 × 3  = 15000
+Buds  → 3000 × 4  = 12000
+```
+
+Result:
+
+```text
+67000
+```
+
+Type:
+
+```kotlin
+Int
+```
+
+---
+
+# 34. `take`
+
+Takes the first `n` elements.
+
+```kotlin
+val numbers = listOf(10, 20, 30, 40, 50)
+
+numbers.take(2)
+```
+
+Result:
+
+```text
+[10, 20]
+```
+
+Type:
+
+```kotlin
+List<Int>
+```
+
+Important:
+
+```text
+take(n) → first n elements
+```
+
+It does **not** add `n` to the list.
+
+If `n` is greater than the list size:
+
+```kotlin
+numbers.take(10)
+```
+
+→ all available elements.
+
+---
+
+# 35. `drop`
+
+Drops the first `n` elements.
+
+```kotlin
+numbers.drop(2)
+```
+
+Result:
+
+```text
+[30, 40, 50]
+```
+
+If `n` is greater than the list size:
+
+```kotlin
+numbers.drop(10)
+```
+
+→
+
+```text
+[]
+```
+
+---
+
+# 36. `takeWhile`
+
+Takes elements from the beginning **while the condition remains true**.
+
+```kotlin
+val numbers = listOf(10, 20, 40, 30, 50)
+
+val result = numbers.takeWhile {
+    it < 35
+}
+```
+
+Result:
+
+```text
+[10, 20]
+```
+
+It stops at `40`.
+
+It does not continue searching for `30`.
+
+---
+
+# 37. `dropWhile`
+
+Drops elements from the beginning while the condition is true.
+
+```kotlin
+val numbers = listOf(10, 20, 40, 30, 50)
+
+val result = numbers.dropWhile {
+    it < 35
+}
+```
+
+Result:
+
+```text
+[40, 30, 50]
+```
+
+---
+
+# 38. `takeLast`
+
+Takes elements from the end.
+
+```kotlin
+val numbers = listOf(10, 20, 30, 40, 50)
+
+numbers.takeLast(2)
+```
+
+Result:
+
+```text
+[40, 50]
+```
+
+---
+
+# 39. `dropLast`
+
+Drops elements from the end.
+
+```kotlin
+numbers.dropLast(2)
+```
+
+Result:
+
+```text
+[10, 20, 30]
+```
+
+---
+
+# 40. `contains`
+
+Checks whether an element exists.
+
+```kotlin
+val numbers = listOf(10, 20, 30, 40, 50)
+
+numbers.contains(30)
+```
+
+Result:
+
+```text
+true
+```
+
+Type:
+
+```kotlin
+Boolean
+```
+
+Alternative syntax:
+
+```kotlin
+30 in numbers
+```
+
+---
+
+# 41. Collection Function Quick Reference
+
+| Function        | Purpose                       | Return                   |
+| --------------- | ----------------------------- | ------------------------ |
+| `map`           | Transform elements            | `List<R>`                |
+| `filter`        | Keep matching elements        | `List<T>`                |
+| `forEach`       | Side effect                   | `Unit`                   |
+| `first`         | First matching element        | `T` / throws             |
+| `firstOrNull`   | First matching or null        | `T?`                     |
+| `find`          | First matching or null        | `T?`                     |
+| `any`           | At least one matches          | `Boolean`                |
+| `all`           | Every element matches         | `Boolean`                |
+| `none`          | No element matches            | `Boolean`                |
+| `contains`      | Element exists                | `Boolean`                |
+| `count`         | Number matching               | `Int`                    |
+| `reduce`        | Combine using first element   | `T`                      |
+| `fold`          | Combine using initial value   | `R`                      |
+| `groupBy`       | Group many values by key      | `Map<K, List<T>>`        |
+| `associateBy`   | One value per key             | `Map<K, T>`              |
+| `associateWith` | Element → calculated value    | `Map<T, R>`              |
+| `partition`     | Matching + non-matching       | `Pair<List<T>, List<T>>` |
+| `flatMap`       | Transform + flatten           | `List<R>`                |
+| `flatten`       | Remove nesting                | `List<T>`                |
+| `zip`           | Pair by position              | `List<Pair<A,B>>`        |
+| `distinct`      | Remove duplicates             | `List<T>`                |
+| `distinctBy`    | Remove duplicates by property | `List<T>`                |
+| `sortedBy`      | Ascending sort                | `List<T>`                |
+| `take`          | First N                       | `List<T>`                |
+| `drop`          | Remove first N                | `List<T>`                |
+| `takeWhile`     | Take while condition true     | `List<T>`                |
+| `dropWhile`     | Drop while condition true     | `List<T>`                |
+| `takeLast`      | Last N                        | `List<T>`                |
+| `dropLast`      | Remove last N                 | `List<T>`                |
+| `sum`           | Sum numbers                   | Numeric type             |
+| `sumOf`         | Sum calculated values         | Numeric type             |
+| `minOrNull`     | Minimum element               | `T?`                     |
+| `maxOrNull`     | Maximum element               | `T?`                     |
+| `minByOrNull`   | Object with minimum property  | `T?`                     |
+| `maxByOrNull`   | Object with maximum property  | `T?`                     |
+| `minOfOrNull`   | Minimum property value        | `R?`                     |
+| `maxOfOrNull`   | Maximum property value        | `R?`                     |
+
+---
+
+# 42. Most Important Interview Comparisons
+
+## `map` vs `filter`
+
+```text
+map
+→ transforms every element
+→ returns List
+
+filter
+→ selects elements
+→ returns List
+```
+
+---
+
+## `filter` vs `count`
+
+```text
+filter { condition }
+→ matching elements
+→ List<T>
+
+count { condition }
+→ number of matching elements
+→ Int
+```
+
+---
+
+## `first` vs `firstOrNull`
+
+```text
+first()
+→ throws if not found
+
+firstOrNull()
+→ returns null if not found
+```
+
+---
+
+## `groupBy` vs `associateBy`
+
+```text
+groupBy
+→ one key → many values
+
+associateBy
+→ one key → one value
+→ later duplicate key replaces previous value
+```
+
+---
+
+## `flatMap` vs `flatten`
+
+```text
+flatten
+→ only removes nesting
+
+flatMap
+→ transforms + removes nesting
+```
+
+---
+
+## `distinct` vs `distinctBy`
+
+```text
+distinct
+→ whole element
+
+distinctBy { it.id }
+→ selected property
+```
+
+---
+
+## `maxByOrNull` vs `maxOfOrNull`
+
+```text
+maxByOrNull { it.price }
+→ Product?
+
+maxOfOrNull { it.price }
+→ Int?
+```
+
+---
+
+## `take` vs `takeWhile`
+
+```text
+take(3)
+→ exactly up to 3 elements
+
+takeWhile { condition }
+→ keeps taking until condition becomes false
+```
+
+---
+
+# 43. Collection Chaining — Interview Skill
+
+Always evaluate a chain from **left to right**.
+
+```kotlin
+val result = numbers
+    .filter { it > 20 }
+    .take(3)
+    .sum()
+```
+
+Given:
+
+```text
+[10, 20, 30, 40, 50, 60]
+```
+
+Step 1:
+
+```text
+filter → [30, 40, 50, 60]
+```
+
+Step 2:
+
+```text
+take(3) → [30, 40, 50]
+```
+
+Step 3:
+
+```text
+sum() → 120
+```
+
+Final:
+
+```text
+result = 120
+type = Int
+```
+
+### Interview habit
+
+Think:
+
+```text
+Input
+  ↓
+Operation 1
+  ↓
+Output
+  ↓
+Operation 2
+  ↓
+Output
+  ↓
+Operation 3
+```
+
+Never jump back to the original collection while evaluating a chain.
+
+---
+
+# 44. `List` vs `Sequence`
+
+## List
+
+Collection operations are generally eager.
+
+```kotlin
+val result = numbers
+    .filter { it % 2 == 0 }
+    .map { it * 10 }
+```
+
+The intermediate result is produced immediately.
+
+---
+
+## Sequence
+
+Operations are lazy.
+
+```kotlin
+val result = numbers
+    .asSequence()
+    .filter { it % 2 == 0 }
+    .map { it * 10 }
+    .first()
+```
+
+Sequence processes elements progressively and can stop early when a terminal operation has enough information.
+
+### Mental model
+
+```text
+List
+→ eager
+
+Sequence
+→ lazy
+```
+
+Useful when:
+
+* collections are large
+* many operations are chained
+* early termination is possible
+
+---
+
+# 45. Common Interview Traps
+
+### Trap 1
+
+```kotlin
+filter { ... }
+```
+
+Does NOT return Boolean.
+
+It returns:
+
+```kotlin
+List<T>
+```
+
+---
+
+### Trap 2
+
+```kotlin
+find { ... }
+```
+
+Does NOT return Boolean.
+
+It returns:
+
+```kotlin
+T?
+```
+
+---
+
+### Trap 3
+
+```kotlin
+forEach { ... }
+```
+
+Returns:
+
+```kotlin
+Unit
+```
+
+---
+
+### Trap 4
+
+```kotlin
+take(3)
+```
+
+Does NOT add `3`.
+
+It takes the first 3 elements.
+
+---
+
+### Trap 5
+
+```kotlin
+drop(3)
+```
+
+Does NOT delete value `3`.
+
+It drops the first 3 elements.
+
+---
+
+### Trap 6
+
+```kotlin
+takeWhile { it > 0 }
+```
+
+Does not scan the entire collection for matching values.
+
+It stops at the first element where the condition becomes false.
+
+---
+
+### Trap 7
+
+```kotlin
+maxByOrNull { it.price }
+```
+
+returns the **object**, not the price.
+
+```kotlin
+maxOfOrNull { it.price }
+```
+
+returns the **price**.
+
+---
+
+### Trap 8
+
+Nullable return types matter.
+
+```kotlin
+maxOrNull()
+firstOrNull()
+find()
+maxByOrNull()
+maxOfOrNull()
+```
+
+can return:
+
+```kotlin
+T?
+```
+
+Don't forget the `?`.
+
+---
+
+# 46. Senior Android Interview Relevance
+
+These functions appear frequently in Android code involving:
+
+### API response transformation
+
+```kotlin
+response.users
+    .filter { it.isActive }
+    .map { UserUiModel(it) }
+```
+
+### Grouping UI data
+
+```kotlin
+messages.groupBy {
+    it.date
+}
+```
+
+### Finding an item
+
+```kotlin
+users.find {
+    it.id == selectedId
+}
+```
+
+### Calculating totals
+
+```kotlin
+cartItems.sumOf {
+    it.price * it.quantity
+}
+```
+
+### Flattening nested API data
+
+```kotlin
+categories.flatMap {
+    it.products
+}
+```
+
+### Removing duplicate API results
+
+```kotlin
+users.distinctBy {
+    it.id
+}
+```
+
+### Sorting UI data
+
+```kotlin
+users.sortedBy {
+    it.name
+}
+```
+
+---
+
+# 47. Interview Revision Formula
+
+When an interviewer gives you a collection function, answer in this order:
+
+```text
+1. What does it do?
+2. What does the lambda return?
+3. What is the function's return type?
+4. What happens for an empty collection?
+5. Does it modify the original collection?
+6. When would I use it in real Android code?
+```
+
+Example:
+
+> **What does `firstOrNull` do?**
+
+Strong answer:
+
+> "`firstOrNull` returns the first element matching the condition, or null when there is no match. Its return type is nullable `T?`. Unlike `first`, it doesn't throw when no element matches."
+
+---
+
+# 48. What I Need to Know Before a Senior Android Interview
+
+### Must be automatic
+
+```text
+map
+filter
+find
+firstOrNull
+any / all / none
+count
+groupBy
+associateBy
+flatMap
+flatten
+distinctBy
+sortedBy
+take / drop
+sum / sumOf
+min/max
+reduce
+fold
+Sequence
+```
+
+### Especially remember the return types
+
+```text
+map             → List<R>
+filter          → List<T>
+forEach         → Unit
+find            → T?
+firstOrNull     → T?
+any             → Boolean
+all             → Boolean
+none            → Boolean
+count           → Int
+groupBy         → Map<K, List<T>>
+associateBy     → Map<K, T>
+partition       → Pair<List<T>, List<T>>
+flatMap         → List<R>
+zip             → List<Pair<A,B>>
+distinctBy      → List<T>
+sortedBy        → List<T>
+fold            → R
+sumOf           → Numeric type
+maxByOrNull     → T?
+maxOfOrNull     → R?
+```
+
+---
+
+
+This cheat sheet covers the Kotlin Collections + Higher-Order Functions section of the interview preparation.
+
+
+
